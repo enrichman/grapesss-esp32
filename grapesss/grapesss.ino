@@ -44,9 +44,28 @@ void setup() {
 
   Serial.println("Starting up!");
 
+  Serial.printf("\nCHIP MAC: %012llx\n", ESP.getEfuseMac());
+  Serial.printf("\nCHIP MAC: %012llx\n", WiFi.macAddress());
+
+  uint32_t low     = ESP.getEfuseMac() & 0xFFFFFFFF; 
+  uint32_t high    = ( ESP.getEfuseMac() >> 32 ) % 0xFFFFFFFF;
+  uint64_t fullMAC = word(low,high);
+
+  Serial.printf("Low: %d\n", low);
+  Serial.printf("High: %d\n", high);
+  Serial.printf("Full: %d\n", fullMAC);
+
   //Print the wakeup reason for ESP32
   print_wakeup_reason();
 
+  // android BT?
+  //64:e8:33:8a:d5:aa
+  // android WiFi?
+  //64:e8:33:8a:d5:a9
+  // Chip ID
+  // a8 d5 8a 33 e8 64
+
+  // https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/misc_system_api.html#mac-address
 
   button.setDebounceTime(50);
   currentAppState = STATE_IDLE;
@@ -104,16 +123,16 @@ void loop() {
 
   // if not IDLE check how long we were in BLE or WIFI
   if (currentAppState != STATE_IDLE) {
-    if (millis() - lastAppStateChange > 10000) {
+    if (millis() - lastAppStateChange > 60000) {
       Serial.println("More than 10s in current state, switching off to IDLE mode");
       currentAppState = STATE_IDLE;
       lastAppStateChange = millis();
 
-      stopWiFIAndServer();
-      stopBLE();
+      //stopWiFIAndServer();
+      //stopBLE();
 
-      Serial.println("Entering deep sleep state");
-      esp_deep_sleep_start();
+      //Serial.println("Entering deep sleep state");
+      //esp_deep_sleep_start();
     }
   }
 }
